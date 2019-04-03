@@ -44,27 +44,27 @@
 //     Configuration for communicating with the DogStatsD agent
 //     Allow overriding the defaults by using `-D` compiler
 //     flag.
-//
+//     
 //     Override the default port
 //         E.G. - g++ (...) -DDOGSTATSD_PORT=12345
 //
 //     Set env variable DOGSTATSD_IP to the IP of the agent.
 //
 #ifndef DOGSTATSD_PORT
-#define DOGSTATSD_PORT 8125
+    #define DOGSTATSD_PORT 8125
 #endif
 
 ////////////////////////////////////////////////////////////////
 // UDP Send
 //
 #if defined(__linux__) || defined(__APPLE__)
-//
-//     Linux and Apple (POSIX-ish)
-//
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#define UDP_SEND_DATAGRAM(data,length) do {\
+    //
+    //     Linux and Apple (POSIX-ish)
+    //
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <unistd.h>
+    #define UDP_SEND_DATAGRAM(data,length) do {\
             char* host_ip;\
             if(!(host_ip = std::getenv("DOGSTATSD_IP")))\
             {std::cerr << "DOGSTATSD_IP is not set!\n";return false;}\
@@ -82,12 +82,12 @@
         } while (0)
 
 #elif defined(_MSC_VER)
-//
+    //
     // Microsoft Windows
     //
     #include <WinSock2.h>
     #pragma comment(lib, "Ws2_32.lib")
-    #pragma warning( disable : 4996 )
+    #pragma warning( disable : 4996 ) 
     #define UDP_SEND_DATAGRAM(data,length) do {\
             char* host_ip;\
             if(!(host_ip = std::getenv("DOGSTATSD_IP")))\
@@ -119,11 +119,11 @@
 //
 //
 #if defined(__clang__)
-#if __has_feature(cxx_noexcept)
-#define _DOGFOOD_HAS_NOEXCEPT
-#endif
+    #if __has_feature(cxx_noexcept)
+        #define _DOGFOOD_HAS_NOEXCEPT
+    #endif
 #else
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) && \
+    #if defined(__GXX_EXPERIMENTAL_CXX0X__) && \
             __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
             defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
         #define _DOGFOOD_HAS_NOEXCEPT
@@ -131,9 +131,9 @@
 #endif
 
 #ifdef _DOGFOOD_HAS_NOEXCEPT
-#define _DOGFOOD_NOEXCEPT noexcept
+    #define _DOGFOOD_NOEXCEPT noexcept
 #else
-#define _DOGFOOD_NOEXCEPT
+    #define _DOGFOOD_NOEXCEPT
 #endif
 
 ////////////////////////////////////////////////////////////////
@@ -142,7 +142,7 @@
 //     UDP by default
 //
 #if defined(_DOGFOOD_UNIT_TEST)
-////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
     // Mock to global variable for unit testing
     static std::string _udp_send_mock;
     #define DOGFOOD_SEND_STDSTRING(string) do {\
@@ -156,9 +156,9 @@
         return _udp_send_mock;
     }
 #else
-////////////////////////////////////////////////////////////
-// Use 'the deal' (Shoutout to Tom)
-#define DOGFOOD_SEND_STDSTRING(string)\
+    ////////////////////////////////////////////////////////////
+    // Use 'the deal' (Shoutout to Tom)
+    #define DOGFOOD_SEND_STDSTRING(string)\
             UDP_SEND_DATAGRAM(string.c_str(),string.length())
 #endif
 
@@ -209,44 +209,44 @@ std::pair<std::string, std::string> Tag(std::string key, std::string value = "")
 //
 inline bool ValidateTags(const std::string& _tag)
 {
-#if defined(_DOGFOOD_UNSAFE_NAMES)
-    ////////////////////////////////////////////////////////
+    #if defined(_DOGFOOD_UNSAFE_NAMES)
+        ////////////////////////////////////////////////////////
         // Support unsafe names
         return true;
-#else
-    ////////////////////////////////////////////////////////
-    // Use explicit name checking
+    #else
+        ////////////////////////////////////////////////////////
+        // Use explicit name checking
 
-    ////////////////////////////////////////////////////////
-    // Verify the length
-    if (_tag.length() == 0 || _tag.length() > 200)
-        return false;
-
-    ////////////////////////////////////////////////////////
-    // Verify the first character is a letter
-    if (!std::isalpha(_tag.at(0)))
-        return false;
-
-    ////////////////////////////////////////////////////////
-    // Verify end is not a colon
-    if (_tag.back() == ':')
-        return false;
-
-    ////////////////////////////////////////////////////////
-    // Verify each character
-    for (size_t n = 0; n < _tag.length(); n++) {
-        const char c = _tag.at(n);
-        if (std::isalnum(c) ||
-            c == '_' || c == '-' ||
-            c == ':' || c == '.' ||
-            c == '/' || c == '\\')
-            continue;
-        else
+        ////////////////////////////////////////////////////////
+        // Verify the length
+        if (_tag.length() == 0 || _tag.length() > 200)
             return false;
-    }
+            
+        ////////////////////////////////////////////////////////
+        // Verify the first character is a letter
+        if (!std::isalpha(_tag.at(0)))
+            return false;
 
-    return true;
-#endif
+        ////////////////////////////////////////////////////////
+        // Verify end is not a colon
+        if (_tag.back() == ':')
+            return false;
+
+        ////////////////////////////////////////////////////////
+        // Verify each character
+        for (size_t n = 0; n < _tag.length(); n++) {
+            const char c = _tag.at(n);
+            if (std::isalnum(c) ||
+                c == '_' || c == '-' ||
+                c == ':' || c == '.' ||
+                c == '/' || c == '\\')
+                continue;
+            else
+                return false;
+        }
+
+        return true;
+    #endif
 }
 
 ////////////////////////////////////////////////////////////////
@@ -276,7 +276,7 @@ inline std::string ExtractTags(const Tags& _tags)
         ////////////////////////////////////////////////////////
         // Clear the tag buffer
         _tag.clear();
-
+        
         ////////////////////////////////////////////////////////
         // If the 'Key' is not empty
         if (p.first.size() > 0)
@@ -294,7 +294,7 @@ inline std::string ExtractTags(const Tags& _tags)
             // Validate the tag
             if (!ValidateTags(_tag))
                 continue;
-
+            
             ////////////////////////////////////////////////////
             // Append the tag and a comma for the next key-value
             stream += (_tag + ",");
@@ -320,37 +320,37 @@ inline std::string ExtractTags(const Tags& _tags)
 //
 inline bool ValidateMetricName(const std::string& _name)
 {
-#if defined(_DOGFOOD_UNSAFE_NAMES)
-    ////////////////////////////////////////////////////////
+    #if defined(_DOGFOOD_UNSAFE_NAMES)
+        ////////////////////////////////////////////////////////
         // Support unsafe names
         return true;
-#else
-    ////////////////////////////////////////////////////////
-    // Use explicit name checking
+    #else
+        ////////////////////////////////////////////////////////
+        // Use explicit name checking
 
-    ////////////////////////////////////////////////////////
-    // Verify the length
-    if (_name.length() == 0 || _name.length() > 200)
-        return false;
-
-    ////////////////////////////////////////////////////////
-    // Verify the first character is a letter
-    if (!std::isalpha(_name.at(0)))
-        return false;
-
-    ////////////////////////////////////////////////////////
-    // Verify each character
-    for (size_t n = 0; n < _name.length(); n++)
-    {
-        const char c = _name.at(n);
-        if (std::isalnum(c) || c == '_' || c == '.')
-            continue;
-        else
+        ////////////////////////////////////////////////////////
+        // Verify the length
+        if (_name.length() == 0 || _name.length() > 200)
             return false;
-    }
+            
+        ////////////////////////////////////////////////////////
+        // Verify the first character is a letter
+        if (!std::isalpha(_name.at(0)))
+            return false;
 
-    return true;
-#endif
+        ////////////////////////////////////////////////////////
+        // Verify each character
+        for (size_t n = 0; n < _name.length(); n++)
+        {
+            const char c = _name.at(n);
+            if (std::isalnum(c) || c == '_' || c == '.')
+                continue;
+            else
+                return false;
+        }
+
+        return true;
+    #endif
 }
 
 ////////////////////////////////////////////////////////////////
@@ -362,7 +362,7 @@ inline bool ValidateSampleRate(const double _rate)
 {
     return
         _rate >= 0.0 &&
-            _rate <= 1.0;
+        _rate <= 1.0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -497,16 +497,16 @@ inline bool ValidatePayloadSize(const std::string& _payload)
 template <typename Numeric>
 typename std::enable_if<
     std::is_integral<Numeric>::value ||
-        std::is_floating_point<Numeric>::value,
-    bool>::type
+    std::is_floating_point<Numeric>::value,
+bool>::type
 Metric
-    (
-        const std::string _name,
-        const Numeric     _number,
-        const Type        _type,
-        const double      _rate     = 1.0,
-        const Tags&       _tags     = Tags()
-    )
+(
+    const std::string _name,
+    const Numeric     _number,
+    const Type        _type,
+    const double      _rate     = 1.0,
+    const Tags&       _tags     = Tags()
+)
 _DOGFOOD_NOEXCEPT
 {
     ////////////////////////////////////////////////////////////
@@ -523,7 +523,7 @@ _DOGFOOD_NOEXCEPT
     //     - Must be between 0.0 and 1.0 (inclusive)
     //
     if (!ValidateSampleRate(_rate)) return false;
-
+    
     ////////////////////////////////////////////////////////////
     // Add the name and the numeric to the datagram
     //
@@ -669,20 +669,20 @@ enum class Alert { Info, Success, Warning, Error };
 template <typename Numeric>
 typename std::enable_if<
     std::is_integral<Numeric>::value ||
-        std::is_floating_point<Numeric>::value,
-    bool>::type
+    std::is_floating_point<Numeric>::value,
+bool>::type
 Event
-    (
-        const std::string _title,
-        const std::string _text,
-        const Numeric     _timestamp         = 0,
-        const std::string _hostname          = "",
-        const std::string _aggregation_key   = "",
-        const Priority    _priority          = Priority::Normal,
-        const std::string _source_type_name  = "",
-        const Alert       _alert_type        = Alert::Info,
-        const Tags&       _tags              = Tags()
-    )
+(
+    const std::string _title,
+    const std::string _text,
+    const Numeric     _timestamp         = 0,
+    const std::string _hostname          = "",
+    const std::string _aggregation_key   = "",
+    const Priority    _priority          = Priority::Normal,
+    const std::string _source_type_name  = "",
+    const Alert       _alert_type        = Alert::Info,
+    const Tags&       _tags              = Tags()
+)
 _DOGFOOD_NOEXCEPT
 {
     ////////////////////////////////////////////////////////////
@@ -700,8 +700,8 @@ _DOGFOOD_NOEXCEPT
     //
     datagram
         += "_e{" + std::to_string(_title.length()) +
-        "," + std::to_string(_etext.length()) +
-        "}:" + _title + "|" + _etext;
+             "," + std::to_string(_etext.length()) +
+            "}:" + _title + "|" + _etext;
 
     ////////////////////////////////////////////////////////////
     // Add the timestamp to the datagram if present
@@ -835,17 +835,17 @@ enum class Status {
 template <typename Numeric>
 typename std::enable_if<
     std::is_integral<Numeric>::value ||
-        std::is_floating_point<Numeric>::value,
-    bool>::type
+    std::is_floating_point<Numeric>::value,
+bool>::type
 ServiceCheck
-    (
-        const std::string _name,
-        const Status      _status,
-        const Numeric     _timestamp = 0,
-        const std::string _hostname  = "",
-        const std::string _message   = "",
-        const Tags&       _tags      = Tags()
-    )
+(
+    const std::string _name,
+    const Status      _status,
+    const Numeric     _timestamp = 0,
+    const std::string _hostname  = "",
+    const std::string _message   = "",
+    const Tags&       _tags      = Tags()
+)
 _DOGFOOD_NOEXCEPT
 {
     ////////////////////////////////////////////////////////////
@@ -910,7 +910,7 @@ _DOGFOOD_NOEXCEPT
 } // namespace DogFood
 
 #if defined(_MSC_VER)
-#pragma warning( default : 4996 )
+    #pragma warning( default : 4996 ) 
 #endif
 
 // Well, I guess that is the end. Until next time, folks!
