@@ -188,7 +188,7 @@ namespace DogFood {
 //
 using Tags = std::vector<std::pair<std::string, std::string>>;
 
-std::pair<std::string, std::string> Tag(std::string key, std::string value = "")
+inline std::pair<std::string, std::string> Tag(std::string key, std::string value = "")
 {
     return std::make_pair(key, value);
 }
